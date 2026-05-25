@@ -3,6 +3,7 @@ import type {
   Producto, ProductoCrear, ProductoActualizar,
   Venta, VentaCrear,
   OrdenSugerida,
+  DashboardResumen,
 } from "./types"
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
@@ -79,6 +80,42 @@ export function createVenta(data: VentaCrear): Promise<Venta> {
   return fetchJSON(`${API}/ventas`, {
     method: "POST",
     body: JSON.stringify(data),
+  })
+}
+
+/* Dashboard */
+export function getResumenDashboard(): Promise<DashboardResumen> {
+  return fetchJSON(`${API}/dashboard/resumen`)
+}
+
+/* Imágenes */
+export function subirImagenProducto(id: string, file: File): Promise<Producto> {
+  const formData = new FormData()
+  formData.append("file", file)
+  return fetch(`${API}/productos/${id}/imagen`, {
+    method: "POST",
+    body: formData,
+  }).then(async (res) => {
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(`API error ${res.status}: ${text}`)
+    }
+    return res.json()
+  })
+}
+
+export function subirImagenProveedor(id: string, file: File): Promise<Proveedor> {
+  const formData = new FormData()
+  formData.append("file", file)
+  return fetch(`${API}/proveedores/${id}/imagen`, {
+    method: "POST",
+    body: formData,
+  }).then(async (res) => {
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(`API error ${res.status}: ${text}`)
+    }
+    return res.json()
   })
 }
 

@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import GlassCard from "@/components/GlassCard"
 import StatusIndicator from "@/components/StatusIndicator"
-import { getProveedores, getProductos, getVentas, getAlertasPedidos } from "@/lib/api"
-import type { Proveedor, Producto, Venta, OrdenSugerida } from "@/lib/types"
+import { getResumenDashboard, getAlertasPedidos } from "@/lib/api"
+import type { DashboardResumen, OrdenSugerida } from "@/lib/types"
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -13,40 +13,25 @@ import {
 const COLORS = ["#ff2d55", "#c1ff72", "#00f2ff", "#ffffff20"]
 
 export default function DashboardPage() {
-  const [proveedores, setProveedores] = useState<Proveedor[]>([])
-  const [productos, setProductos] = useState<Producto[]>([])
-  const [ventas, setVentas] = useState<Venta[]>([])
+  const [resumen, setResumen] = useState<DashboardResumen | null>(null)
   const [alertas, setAlertas] = useState<OrdenSugerida[]>([])
 
   useEffect(() => {
     Promise.all([
-      getProveedores(),
-      getProductos(),
-      getVentas(),
+      getResumenDashboard(),
       getAlertasPedidos(),
-    ]).then(([prov, prod, ven, alert]) => {
-      setProveedores(prov)
-      setProductos(prod)
-      setVentas(ven)
+    ]).then(([res, alert]) => {
+      setResumen(res)
       setAlertas(alert)
     }).catch(() => {})
   }, [])
 
-  const ventasPorMes = ventas.reduce<Record<string, number>>((acc, v) => {
-    const month = v.fecha_venta.slice(0, 7)
-    acc[month] = (acc[month] || 0) + v.cantidad
-    return acc
-  }, {})
-
-  const chartData = Object.entries(ventasPorMes).map(([mes, cantidad]) => ({
-    mes,
-    cantidad,
-  }))
+  const chartData = resumen?.ventas_por_mes ?? []
 
   const stockData = [
-    { name: "Stock bajo (<10)", value: productos.filter((p) => p.stock_actual < 10).length },
-    { name: "Stock medio (10-50)", value: productos.filter((p) => p.stock_actual >= 10 && p.stock_actual <= 50).length },
-    { name: "Stock alto (>50)", value: productos.filter((p) => p.stock_actual > 50).length },
+    { name: "Stock bajo (<10)", value: resumen?.distribucion_stock.bajo ?? 0 },
+    { name: "Stock medio (10-50)", value: resumen?.distribucion_stock.medio ?? 0 },
+    { name: "Stock alto (>50)", value: resumen?.distribucion_stock.alto ?? 0 },
   ]
 
   const urgentes = alertas.filter((a) => a.estado_alerta === "Urgente" || a.estado_alerta === "Pedir ahora")
@@ -59,19 +44,19 @@ export default function DashboardPage() {
         <GlassCard glow="pink" padding="p-6">
           <div className="flex flex-col gap-2">
             <span className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-satoshi font-bold">Proveedores</span>
-            <span className="text-4xl font-bold text-white/90 font-clash">{proveedores.length}</span>
+            <span className="text-4xl font-bold text-white/90 font-clash">{resumen?.total_proveedores ?? 0}</span>
           </div>
         </GlassCard>
         <GlassCard glow="lime" padding="p-6">
           <div className="flex flex-col gap-2">
             <span className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-satoshi font-bold">Productos</span>
-            <span className="text-4xl font-bold text-white/90 font-clash">{productos.length}</span>
+            <span className="text-4xl font-bold text-white/90 font-clash">{resumen?.total_productos ?? 0}</span>
           </div>
         </GlassCard>
         <GlassCard glow="cyan" padding="p-6">
           <div className="flex flex-col gap-2">
             <span className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-satoshi font-bold">Ventas</span>
-            <span className="text-4xl font-bold text-white/90 font-clash">{ventas.length}</span>
+            <span className="text-4xl font-bold text-white/90 font-clash">{resumen?.total_ventas ?? 0}</span>
           </div>
         </GlassCard>
         <GlassCard glow="pink" padding="p-6">

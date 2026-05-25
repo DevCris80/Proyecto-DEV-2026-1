@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import GlassTable from "@/components/GlassTable"
 import SearchInput from "@/components/SearchInput"
 import Modal from "@/components/Modal"
-import { getProductos, buscarProductos, createProducto, updateProducto, deleteProducto, getProveedores } from "@/lib/api"
+import { getProductos, buscarProductos, createProducto, updateProducto, deleteProducto, getProveedores, subirImagenProducto } from "@/lib/api"
 import type { Producto, ProductoCrear, ProductoActualizar, Proveedor } from "@/lib/types"
 
 const defaultForm: ProductoCrear = {
@@ -24,6 +24,36 @@ export default function ProductosPage() {
   const [editing, setEditing] = useState<Producto | null>(null)
   const [form, setForm] = useState<ProductoCrear>(defaultForm)
   const [error, setError] = useState("")
+  const [uploadingImg, setUploadingImg] = useState(false)
+  const [pendingImage, setPendingImage] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function uploadImage(productoId: string) {
+    const file = pendingImage || fileInputRef.current?.files?.[0]
+    if (!file) return
+    setUploadingImg(true)
+    setError("")
+    try {
+      const updated = await subirImagenProducto(productoId, file)
+      setProductos((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+      if (editing?.id === updated.id) setEditing(updated)
+      setPendingImage(null)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    } catch (err) {
+      setError(String(err))
+    } finally {
+      setUploadingImg(false)
+    }
+  }
+
+  function handleFileSelected(file: File | null) {
+    if (editing && file) {
+      setPendingImage(file)
+      uploadImage(editing.id)
+    } else if (file) {
+      setPendingImage(file)
+    }
+  }
 
   useEffect(() => {
     getProductos().then(setProductos).catch(() => {})
@@ -77,13 +107,23 @@ export default function ProductosPage() {
       if (editing) {
         const updated: ProductoActualizar = { ...form }
         await updateProducto(editing.id, updated)
+        if (pendingImage) await uploadImage(editing.id)
       } else {
-        await createProducto(form)
+        const creado = await createProducto(form)
+        if (pendingImage) {
+          const updated = await subirImagenProducto(creado.id, pendingImage)
+          setProductos((prev) => [...prev, updated])
+          setPendingImage(null)
+          if (fileInputRef.current) fileInputRef.current.value = ""
+        } else {
+          setProductos((prev) => [...prev, creado])
+        }
       }
       const data = await getProductos()
       setProductos(data)
       setSearch("")
       setModalOpen(false)
+      setPendingImage(null)
     } catch (err) {
       setError(String(err))
     }
@@ -116,6 +156,16 @@ export default function ProductosPage() {
 
       <GlassTable
         columns={[
+          {
+            key: "imagen",
+            header: "Img",
+            render: (p: Producto) =>
+              p.imagen_url ? (
+                <img src={p.imagen_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[10px] text-white/30">—</div>
+              ),
+          },
           { key: "nombre", header: "Nombre" },
           { key: "id_proveedor", header: "Proveedor", render: (p: Producto) => proveedorNombre(p.id_proveedor) },
           { key: "stock_actual", header: "Stock" },
@@ -195,6 +245,24 @@ export default function ProductosPage() {
               onChange={(e) => setForm({ ...form, demanda_anual_estimada: parseFloat(e.target.value) || 0 })}
               className="w-full glass rounded-xl px-4 py-2.5 text-sm text-white/90 outline-none font-satoshi"
             />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-satoshi font-bold block mb-1">Imagen</label>
+            {editing?.imagen_url && (
+              <img src={editing.imagen_url} alt="" className="w-16 h-16 rounded-xl object-cover mb-2" />
+            )}
+            {pendingImage && !uploadingImg && (
+              <p className="text-[10px] text-lime mb-1 font-satoshi">Imagen seleccionada (se subirá al guardar)</p>
+            )}
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileSelected(e.target.files?.[0] ?? null)} />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImg}
+              className="px-4 py-2 rounded-full glass text-[10px] uppercase tracking-[0.3em] text-white/90 hover:text-white hover:bg-white/5 transition-all duration-300 cursor-pointer disabled:opacity-50 font-satoshi font-medium"
+            >
+              {uploadingImg ? "Subiendo..." : "Subir imagen"}
+            </button>
           </div>
           {error && <p className="text-pink text-xs font-satoshi">{error}</p>}
           <button
