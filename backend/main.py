@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from urllib.parse import urlparse
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,11 +21,13 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 
+frontend_host = urlparse(settings.frontend_url).netloc
+
 app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", f"{settings.frontend_url}"],
+    allow_origin_regex=rf"https?://({frontend_host}|proyecto-dev-2026-1.*\.vercel\.app)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
