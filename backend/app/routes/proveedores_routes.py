@@ -59,3 +59,4 @@ async def eliminar_proveedor(
     exito = await proveedor_repo.eliminar(session, id)
     if not exito:
         raise HTTPException(status_code=404, detail="ID no encontrado")
+    return {"detail": f"Proveedor con ID {id} ha sido desactivado."}

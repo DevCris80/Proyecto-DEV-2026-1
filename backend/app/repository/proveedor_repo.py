@@ -7,7 +7,7 @@ from app.models.proveedor import Proveedor, ProveedorCreate, ProveedorUpdate
 
 async def listar_activos(session: AsyncSession) -> list[Proveedor]:
     result = await session.execute(
-        select(Proveedor).where(Proveedor.estado_activo == True)
+        select(Proveedor).where(Proveedor.estado_activo)
     )
     return result.scalars().all()
 

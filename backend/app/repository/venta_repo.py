@@ -8,7 +8,7 @@ from app.models.producto import Producto
 
 async def listar(session: AsyncSession) -> list[Venta]:
     result = await session.execute(select(Venta))
-    return result.scalars().all()
+    return result.scalars().all() # type: ignore[return-value]
 
 
 async def obtener_por_id(session: AsyncSession, id: str) -> Venta | None:
@@ -32,7 +32,7 @@ async def crear_con_descuento_stock(
     producto = await session.execute(
         select(Producto).where(
             Producto.id == datos.id_producto,
-            Producto.estado_activo == True,
+            Producto.estado_activo,
         )
     )
     producto = producto.scalar_one_or_none()
