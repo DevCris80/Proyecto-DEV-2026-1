@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={`${satoshi.variable} ${clashGrotesk.variable}`}>
-      <body className="min-h-screen flex flex-col mesh-gradient">
+      <body className="h-screen flex flex-col mesh-gradient">
         <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
           <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full border border-white/[0.02] animate-float opacity-20" />
           <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full border border-white/[0.02] animate-float opacity-15" style={{ animationDelay: "-4s" }} />
