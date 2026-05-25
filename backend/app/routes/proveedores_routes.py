@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
+from app.core.storage import subir_imagen_supabase
 from app.models.proveedor import ProveedorCreate, ProveedorPublic, ProveedorUpdate
 from app.repository import proveedor_repo
 
@@ -49,6 +50,22 @@ async def actualizar_proveedor(
             detail=f"Proveedor con ID {id} no encontrado.",
         )
     return proveedor
+
+
+@router.post("/{id}/imagen", response_model=ProveedorPublic, status_code=200)
+async def subir_imagen_proveedor(
+    id: str,
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_session),
+):
+    proveedor = await proveedor_repo.obtener_por_id(session, id)
+    if not proveedor:
+        raise HTTPException(status_code=404, detail="Proveedor no encontrado.")
+    
+    url_imagen = await subir_imagen_supabase(file, folder="public/proveedores")
+    
+    actualizacion = ProveedorUpdate(imagen_url=url_imagen)
+    return await proveedor_repo.actualizar(session, id, actualizacion)
 
 
 @router.delete("/{id}", status_code=204)

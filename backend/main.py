@@ -11,6 +11,7 @@ from app.routes.proveedores_routes import router as proveedor_router
 from app.routes.productos_routes import router as productos_router
 from app.routes.ventas_routes import router as ventas_router
 from app.routes.optimizacion_routes import router as optimizacion_router
+from app.routes.dashboard_routes import router as dashboard_router
 
 
 @asynccontextmanager
@@ -37,6 +38,7 @@ app.include_router(proveedor_router)
 app.include_router(productos_router)
 app.include_router(ventas_router)
 app.include_router(optimizacion_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/")

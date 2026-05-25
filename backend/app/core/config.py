@@ -6,6 +6,9 @@ class Settings(BaseSettings):
 
     database_url: str
     frontend_url: str = "http://localhost:3000"
+    supabase_url: str = ""
+    supabase_key: str = ""
+    supabase_bucket: str = ""
 
 
 settings = Settings()

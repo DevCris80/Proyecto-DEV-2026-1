@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
+from app.core.storage import subir_imagen_supabase
 from app.models.producto import ProductoCreate, ProductoPublic, ProductoUpdate
 from app.repository import producto_repo, proveedor_repo
 
@@ -78,6 +79,21 @@ async def actualizar_producto(
             detail=f"Producto con ID {id} no encontrado.",
         )
     return producto
+
+@router.post("/{id}/imagen", response_model=ProductoPublic, status_code=200)
+async def subir_imagen_producto(
+    id: str,
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_session),
+):
+    producto = await producto_repo.obtener_por_id(session, id)
+    if not producto:
+        raise HTTPException(status_code=404, detail="Producto no encontrado.")
+    
+    url_imagen = await subir_imagen_supabase(file, folder="public/productos")
+    
+    actualizacion = ProductoUpdate(imagen_url=url_imagen)
+    return await producto_repo.actualizar(session, id, actualizacion)
 
 
 @router.delete("/{id}", status_code=200)

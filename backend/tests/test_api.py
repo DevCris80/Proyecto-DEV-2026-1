@@ -228,3 +228,31 @@ class TestRootAPI:
         response = await client.get("/")
         assert response.status_code == 200
         assert "Saludo" in response.json()
+
+class TestDashboardAPI:
+    async def test_obtener_resumen_dashboard(self, client):
+        with (
+            patch(
+                "app.routes.dashboard_routes.proveedor_repo.listar_activos",
+                new_callable=AsyncMock,
+                return_value=[],
+            ),
+            patch(
+                "app.routes.dashboard_routes.producto_repo.listar_activos",
+                new_callable=AsyncMock,
+                return_value=[],
+            ),
+            patch(
+                "app.routes.dashboard_routes.venta_repo.listar",
+                new_callable=AsyncMock,
+                return_value=[],
+            )
+        ):
+            response = await client.get("/dashboard/resumen")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["total_proveedores"] == 0
+            assert data["total_productos"] == 0
+            assert data["total_ventas"] == 0
+            assert data["distribucion_stock"] == {"bajo": 0, "medio": 0, "alto": 0}
+            assert data["ventas_por_mes"] == []

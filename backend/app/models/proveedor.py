@@ -8,6 +8,7 @@ class ProveedorBase(SQLModel):
     lead_time_promedio: float = Field(gt=0)
     desviacion_estandar_lead_time: float = 0.0
     nivel_servicio_objetivo: float = Field(default=0.95, ge=0.8, le=0.99)
+    imagen_url: Optional[str] = None
 
 
 class Proveedor(ProveedorBase, table=True):
@@ -27,6 +28,7 @@ class ProveedorUpdate(SQLModel):
     desviacion_estandar_lead_time: Optional[float] = None
     nivel_servicio_objetivo: Optional[float] = Field(default=None, ge=0.8, le=0.99)
     estado_activo: Optional[bool] = None
+    imagen_url: Optional[str] = None
 
 
 class ProveedorPublic(ProveedorBase):
