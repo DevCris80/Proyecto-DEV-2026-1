@@ -15,7 +15,7 @@ interface GlassTableProps<T> {
 
 export default function GlassTable<T>({ columns, data, keyExtractor, onRowClick }: GlassTableProps<T>) {
   return (
-    <div className="glass rounded-[2rem] overflow-hidden">
+    <div className="glass rounded-[2rem] overflow-x-auto">
       <table className="w-full">
         <thead>
           <tr className="border-b border-glass-border">
