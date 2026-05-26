@@ -24,7 +24,7 @@ def calcular_optimizacion(
         math.sqrt(numerador_eoq / producto.costo_almacenamiento_anual)
     )
 
-    z_score = 1.645
+    z_score = statistics.NormalDist().inv_cdf(proveedor.nivel_servicio_objetivo)
 
     if n_ventas < 5:
         stock_seguridad = math.ceil(
